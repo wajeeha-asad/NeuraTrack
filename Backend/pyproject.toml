@@ -1,0 +1,21 @@
+[project]
+name = "neuratrack-backend"
+version = "1.0.0"
+description = "NeuraTrack backend API"
+requires-python = ">=3.11"
+
+dependencies = [
+    "alembic==1.18.5",
+    "argon2-cffi==25.1.0",
+    "cryptography==49.0.0",
+    "email-validator==2.3.0",
+    "fastapi==0.140.0",
+    "psycopg2-binary==2.9.12",
+    "pydantic==2.13.4",
+    "pydantic-settings==2.14.2",
+    "python-dotenv==1.2.2",
+    "python-jose==3.5.0",
+    "PyYAML==6.0.3",
+    "SQLAlchemy==2.0.51",
+    "uvicorn==0.51.0",
+]
