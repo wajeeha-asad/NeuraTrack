@@ -1,158 +1,288 @@
-# NeuraTrack
+# 🧠 NeuraTrack
 
-NeuraTrack is a full-stack learning tracker that helps you plan learning paths, run focused study sessions, and visualize your progress over time. It combines a FastAPI backend with a React (Vite) frontend, and gamifies studying with XP, levels, streaks, and achievements.
+> A full-stack learning and productivity platform built to help students plan what to learn, stay focused, and understand their progress.
 
-## Features
+<p align="center">
+  <a href="https://neuratrack-app.vercel.app"><strong>🚀 Live Demo</strong></a>
+  &nbsp;•&nbsp;
+  <a href="https://neuratrack-backend.fastapicloud.dev/docs"><strong>📚 API Docs</strong></a>
+</p>
 
-- **Authentication** — register/login with JWT-based auth, protected routes on the frontend
-- **Learning Paths** — create paths by category/difficulty/deadline, break them into sessions, and mark sessions complete
-- **Focus Sessions** — run timed focus/study sessions and log them against a subject or learning path
-- **Dashboard** — an at-a-glance view of stats, goals, weekly trends, and recent sessions
-- **Analytics** — weekly/monthly study charts, subject distribution, and a study heatmap
-- **Achievements & XP** — levels, XP, and streaks (current/longest) to keep motivation up
-- **Profile & Settings** — editable profile, learning goals, theme, sound/animation toggles, notifications
-- **Nova** — an animated companion on the dashboard that greets you and cycles through contextual, encouraging messages based on your streak, level, and weekly progress
+NeuraTrack is a production-deployed full-stack web application that combines learning-path management, focused study sessions, progress analytics, gamification, and JWT authentication in one experience.
 
-## Tech Stack
+It was built from scratch with a React frontend and FastAPI backend, backed by PostgreSQL and deployed for real-world use.
 
-**Backend**
-- FastAPI, Pydantic v2 / pydantic-settings
-- SQLAlchemy 2.0 ORM + Alembic migrations
-- PostgreSQL (via `psycopg2-binary`), JWT auth (`python-jose`), password hashing (`argon2-cffi`)
-- Uvicorn ASGI server
+## ✨ Features
 
-**Frontend**
-- React 19 + Vite
+- 🔐 **Authentication** — Register, login, JWT-based authentication, protected routes, and persistent sessions
+- 📚 **Learning Paths** — Create and manage learning goals, organize sessions, track completion, and monitor deadlines
+- ⏱️ **Focus Sessions** — Run focused study sessions and record time against learning goals
+- 📊 **Analytics** — Visualize weekly/monthly study activity, subject distribution, and progress trends
+- 🏆 **Gamification** — XP, levels, streaks, and achievements to encourage consistency
+- 🏠 **Dashboard** — Centralized overview of goals, study activity, statistics, and recent sessions
+- 👤 **Profile & Settings** — Manage profile information, learning preferences, theme, notifications, sounds, and animations
+- 🤖 **Nova** — An animated learning companion that provides contextual encouragement based on progress and streaks
+- 📱 **Responsive UI** — Designed to work across desktop and mobile devices
+- ☁️ **Production Deployment** — Frontend and backend deployed separately and connected through a production API
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+- React 19
+- Vite
 - React Router
-- Tailwind CSS v4, shadcn/ui components, Radix (`@base-ui/react`)
-- Recharts (charts), Framer Motion (animation), Lottie (Nova assistant), React Hook Form + Zod (forms/validation)
+- Tailwind CSS v4
+- shadcn/ui + Radix
+- Recharts
+- Framer Motion
+- Lottie
+- React Hook Form + Zod
+- Lucide React
 
-## Project Structure
+### Backend
 
+- Python
+- FastAPI
+- Pydantic v2 / pydantic-settings
+- SQLAlchemy 2.0
+- Alembic
+- PostgreSQL
+- psycopg2-binary
+- JWT authentication with `python-jose`
+- Argon2 password hashing
+- Uvicorn
+
+### Infrastructure
+
+- **Frontend:** Vercel
+- **Backend:** FastAPI Cloud
+- **Database:** Supabase PostgreSQL
+- **Version Control:** Git + GitHub
+
+## 🏗️ Architecture
+
+```text
+┌───────────────────────┐
+│     React + Vite      │
+│      Frontend         │
+│        Vercel         │
+└───────────┬───────────┘
+            │ HTTPS / REST API
+            ▼
+┌───────────────────────┐
+│       FastAPI         │
+│       Backend         │
+│     FastAPI Cloud     │
+└───────────┬───────────┘
+            │ SQLAlchemy
+            ▼
+┌───────────────────────┐
+│      PostgreSQL       │
+│        Supabase       │
+└───────────────────────┘
 ```
+
+## 📁 Project Structure
+
+```text
 NeuraTrack/
 ├── Backend/
 │   ├── app/
-│   │   ├── core/          # config & security (JWT, hashing)
-│   │   ├── db/            # SQLAlchemy models & session setup
-│   │   ├── dependencies/  # auth & DB dependencies
+│   │   ├── core/          # Configuration and security
+│   │   ├── db/            # Database models and session setup
+│   │   ├── dependencies/  # Authentication and DB dependencies
 │   │   ├── routers/       # API route definitions
 │   │   ├── schemas/       # Pydantic request/response models
-│   │   ├── services/      # business logic
-│   │   └── main.py        # FastAPI app entrypoint
-│   ├── alembic/           # database migrations
+│   │   ├── services/      # Business logic
+│   │   └── main.py        # FastAPI application entrypoint
+│   ├── alembic/           # Database migrations
 │   ├── requirements.txt
 │   └── .env.example
+│
 └── Frontend/
     ├── src/
-    │   ├── components/    # feature-organized UI components
-    │   ├── pages/          # route-level pages
-    │   ├── services/       # API client modules
-    │   ├── context/        # AuthContext
-    │   ├── routes/         # AppRouter, ProtectedRoute
-    │   └── data/           # static/config data
+    │   ├── components/    # Reusable UI components
+    │   ├── pages/         # Route-level pages
+    │   ├── services/      # API client and services
+    │   ├── context/       # Authentication context
+    │   ├── routes/        # Application routing
+    │   └── data/          # Static/configuration data
+    ├── public/
     ├── package.json
-    └── .env.example
+    └── vercel.json        # SPA routing configuration
 ```
 
-## Getting Started
+## 🚀 Live Application
+
+**Frontend:** https://neuratrack-app.vercel.app
+
+**Backend API:** https://neuratrack-backend.fastapicloud.dev
+
+**Interactive API Docs:** https://neuratrack-backend.fastapicloud.dev/docs
+
+## 💻 Run Locally
 
 ### Prerequisites
 
 - Python 3.11+
 - Node.js 18+
-- PostgreSQL
+- PostgreSQL / Supabase PostgreSQL
+- Git
 
-### 1. Backend Setup
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/wajeeha-asad/NeuraTrack.git
+cd NeuraTrack
+```
+
+### 2. Configure the backend
 
 ```bash
 cd Backend
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-cp .env.example .env
-# then edit .env with your DATABASE_URL and SECRET_KEY
 ```
 
-`.env` variables:
+Activate the virtual environment:
+
+**Windows**
+
+```bash
+venv\Scripts\activate
+```
+
+**macOS/Linux**
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Create your environment file from the example:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell, you can copy it with:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Configure the required variables in `.env`:
 
 | Variable | Description |
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `SECRET_KEY` | Secret used to sign JWTs |
-| `ALGORITHM` | JWT signing algorithm (default `HS256`) |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime in minutes (default `60`) |
+| `ALGORITHM` | JWT signing algorithm, typically `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token lifetime |
 
-Run database migrations:
+Run migrations:
 
 ```bash
 alembic upgrade head
 ```
 
-Start the API server:
+Start the API:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The API will be available at `http://127.0.0.1:8000`. Interactive docs are at `http://127.0.0.1:8000/docs`.
+The backend will run at `http://127.0.0.1:8000`.
 
-### 2. Frontend Setup
+### 3. Configure the frontend
+
+Open a new terminal:
 
 ```bash
 cd Frontend
 npm install
-
-cp .env.example .env
-# defaults to VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-Start the dev server:
+Create the environment file:
+
+```bash
+cp .env.example .env
+```
+
+Set the API URL in `.env`:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Start the frontend:
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
+The frontend will run at `http://localhost:5173`.
 
-## API Overview
-
-All endpoints below (except auth) require a valid JWT bearer token.
+## 🔌 API Overview
 
 | Area | Base Path | Examples |
 |---|---|---|
-| Auth | `/api/auth` | register, login, get/update current user |
-| Users | `/api/users` | update profile |
-| Learning Paths | `/api/learning-paths` | CRUD paths, add/update/delete/complete sessions |
-| Focus | `/api/focus` | list/create focus sessions |
-| Dashboard | `/api/dashboard` | aggregated dashboard data |
-| Analytics | `/api` | `/analytics`, `/achievements` |
-| Settings | `/api/settings` | get/update user settings |
+| Authentication | `/api/auth` | Register, login, current user |
+| Users | `/api/users` | Profile updates |
+| Learning Paths | `/api/learning-paths` | CRUD paths and sessions |
+| Focus | `/api/focus` | Create and list focus sessions |
+| Dashboard | `/api/dashboard` | Aggregated dashboard data |
+| Analytics | `/api` | Analytics and achievements |
+| Settings | `/api/settings` | User settings |
 
-Health checks: `GET /health` and `GET /health/database`.
+Health endpoints:
 
-## Meet Nova
+- `GET /health`
+- `GET /health/database`
 
-Nova is the dashboard's animated mascot, built from a Lottie animation (`src/assets/lottie/nova.json`) rendered by the `Nova` and `NovaMessage` components (`src/components/dashboard/`). It floats above the dashboard with a subtle idle animation, glow, stars, and sparkles, and shows a speech bubble that rotates every few seconds through short, personalized messages, for example:
+## 🤖 Meet Nova
 
-- A welcome message using your name
-- A callout to your current streak (or a nudge to start one)
-- A prompt to start a study session
-- Your current level and a nudge to level up
-- Encouragement based on your weekly goal progress
+Nova is NeuraTrack's animated learning companion. It lives on the dashboard and provides contextual messages based on the user's learning progress, including streaks, level, and weekly goal completion.
 
-Nova is purely a frontend, presentation-layer feature — it derives its messages from stats already returned by the `/api/dashboard` endpoint (streak, level, weekly progress) and requires no backend changes of its own.
+Nova is implemented as a frontend presentation feature using Lottie and derives its context from dashboard data returned by the backend.
 
-## Available Scripts (Frontend)
+## 📜 Available Frontend Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Build for production |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Create a production build |
 | `npm run preview` | Preview the production build |
 | `npm run lint` | Run ESLint |
 
-## License
+## 🔒 Security Notes
 
-No license specified.
+Environment files containing secrets are intentionally excluded from Git using `.gitignore`.
+
+Never commit database credentials, JWT secrets, API keys, or other sensitive environment variables to the repository.
+
+## 🌱 Future Improvements
+
+- AI-powered learning recommendations
+- Smarter study-plan generation
+- More detailed productivity insights
+- Advanced goal and habit tracking
+- Notifications and reminders
+- Expanded Nova AI capabilities
+
+## 👩‍💻 Built By
+
+**Wajeeha Asad**
+
+Computer Science student and aspiring AI/full-stack engineer.
+
+- GitHub: https://github.com/wajeeha-asad
+
+## ⭐ Support
+
+If you find NeuraTrack interesting, consider giving the repository a ⭐ on GitHub.
