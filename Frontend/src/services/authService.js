@@ -1,22 +1,43 @@
 import api from "./api";
 
+const ACCESS_TOKEN_KEY =
+  "neuratrack_access_token";
+
+const REFRESH_TOKEN_KEY =
+  "neuratrack_refresh_token";
+
+function storeAuthenticationTokens(
+  data
+) {
+  if (data?.access_token) {
+    localStorage.setItem(
+      ACCESS_TOKEN_KEY,
+      data.access_token
+    );
+  }
+
+  if (data?.refresh_token) {
+    localStorage.setItem(
+      REFRESH_TOKEN_KEY,
+      data.refresh_token
+    );
+  }
+}
+
 // ==================================================
 // REGISTER
 // ==================================================
 
 export async function registerUser(userData) {
-  const data = await api("/api/auth/register", {
-    method: "POST",
-    body: JSON.stringify(userData),
-  });
+  const data = await api(
+    "/api/auth/register",
+    {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }
+  );
 
-  // Save JWT returned by backend
-  if (data.access_token) {
-    localStorage.setItem(
-      "neuratrack_access_token",
-      data.access_token
-    );
-  }
+  storeAuthenticationTokens(data);
 
   // Save authenticated user
   if (data.user) {
@@ -34,18 +55,15 @@ export async function registerUser(userData) {
 // ==================================================
 
 export async function loginUser(credentials) {
-  const data = await api("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify(credentials),
-  });
+  const data = await api(
+    "/api/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    }
+  );
 
-  // Save JWT token
-  if (data.access_token) {
-    localStorage.setItem(
-      "neuratrack_access_token",
-      data.access_token
-    );
-  }
+  storeAuthenticationTokens(data);
 
   // Save user data
   if (data.user) {
@@ -88,7 +106,11 @@ export async function changePassword(
 
 export function logoutUser() {
   localStorage.removeItem(
-    "neuratrack_access_token"
+    ACCESS_TOKEN_KEY
+  );
+
+  localStorage.removeItem(
+    REFRESH_TOKEN_KEY
   );
 
   localStorage.removeItem(
@@ -127,7 +149,7 @@ export function getStoredUser() {
 export function isAuthenticated() {
   return Boolean(
     localStorage.getItem(
-      "neuratrack_access_token"
+      ACCESS_TOKEN_KEY
     )
   );
 }
