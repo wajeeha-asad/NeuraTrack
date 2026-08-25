@@ -5,11 +5,14 @@ from fastapi import (
     status,
 )
 
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.security import (
     create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
 )
 
 from app.db.models import User
@@ -28,6 +31,8 @@ from app.schemas.auth import (
     RegisterRequest,
     UserResponse,
     ChangePasswordRequest,
+    RefreshRequest,
+    RefreshResponse,
 )
 
 from app.services.auth_service import (
@@ -84,9 +89,14 @@ def register(
         user.id
     )
 
+    refresh_token = create_refresh_token(
+        user.id
+    )
+
     return AuthResponse(
         message="Registration successful.",
         access_token=access_token,
+        refresh_token=refresh_token,
         user=user,
     )
 
@@ -124,10 +134,65 @@ def login(
         user.id
     )
 
+    refresh_token = create_refresh_token(
+        user.id,
+        remember_me=data.remember_me,
+    )
+
     return AuthResponse(
         message="Login successful.",
         access_token=access_token,
+        refresh_token=refresh_token,
         user=user,
+    )
+
+
+# ==================================================
+# REFRESH ACCESS TOKEN
+# ==================================================
+
+@router.post(
+    "/refresh",
+    response_model=RefreshResponse,
+)
+def refresh_access_token(
+    data: RefreshRequest,
+    db: Session = Depends(
+        get_database
+    ),
+):
+    user_id = decode_refresh_token(
+        data.refresh_token
+    )
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token.",
+            headers={
+                "WWW-Authenticate": "Bearer"
+            },
+        )
+
+    user = db.scalar(
+        select(User).where(
+            User.id == user_id
+        )
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found.",
+            headers={
+                "WWW-Authenticate": "Bearer"
+            },
+        )
+
+    return RefreshResponse(
+        access_token=create_access_token(
+            user.id
+        )
     )
 
 
