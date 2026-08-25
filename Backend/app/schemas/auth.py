@@ -52,6 +52,13 @@ class LoginRequest(BaseModel):
     remember_me: bool = False
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str = Field(
+        ...,
+        min_length=1,
+    )
+
+
 class ChangePasswordRequest(BaseModel):
     current_password: str = Field(
         ...,
@@ -105,5 +112,11 @@ class UserResponse(BaseModel):
 class AuthResponse(BaseModel):
     message: str
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class RefreshResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
