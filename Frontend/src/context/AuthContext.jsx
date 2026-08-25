@@ -28,6 +28,16 @@ export function AuthProvider({ children }) {
   // ==================================================
 
   useEffect(() => {
+    const handleAuthenticationExpired = () => {
+      setUser(null);
+      setLoading(false);
+    };
+
+    window.addEventListener(
+      "neuratrack-auth-expired",
+      handleAuthenticationExpired
+    );
+
     const restoreUser = async () => {
       const token = localStorage.getItem(
         "neuratrack_access_token"
@@ -40,7 +50,8 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        // Verify the JWT with the backend
+        // The API layer automatically refreshes an expired
+        // access token when a valid refresh token exists.
         const currentUser =
           await getCurrentUser();
 
@@ -57,7 +68,8 @@ export function AuthProvider({ children }) {
           error
         );
 
-        // Token is invalid or expired
+        // Both tokens are cleared when the refresh token
+        // is missing, invalid, or expired.
         logoutUser();
         setUser(null);
       } finally {
@@ -66,6 +78,13 @@ export function AuthProvider({ children }) {
     };
 
     restoreUser();
+
+    return () => {
+      window.removeEventListener(
+        "neuratrack-auth-expired",
+        handleAuthenticationExpired
+      );
+    };
   }, []);
 
   // ==================================================
@@ -134,7 +153,7 @@ export function AuthProvider({ children }) {
       }
 
       // Registration also authenticates the user
-      // because the backend returns a JWT.
+      // because the backend returns access + refresh tokens.
       setUser(data.user);
 
       // Keep cached user synchronized
