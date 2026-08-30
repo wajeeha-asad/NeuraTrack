@@ -14,7 +14,7 @@ It combines learning-path management, focus sessions, analytics, achievements, a
 
 ## 🚀 Live Demo
 
-🌐 **Frontend:** https://neuratrack-three.vercel.app/
+🌐 **Frontend:** https://neuratrack-app.vercel.app/
 
 ⚡ **Backend API:** https://neuratrack-backend.fastapicloud.dev/
 
