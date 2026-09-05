@@ -11,6 +11,7 @@ from app.routers.learning import router as learning_router
 from app.routers.focus import router as focus_router
 from app.routers.dashboard import router as dashboard_router
 from app.routers.analytics import router as analytics_router
+from app.routers.notifications import router as notifications_router
 
 
 app = FastAPI(
@@ -53,6 +54,7 @@ app.include_router(learning_router)
 app.include_router(focus_router)
 app.include_router(dashboard_router)
 app.include_router(analytics_router)
+app.include_router(notifications_router)
 
 # =========================
 # ROOT
