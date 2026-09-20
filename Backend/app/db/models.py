@@ -29,9 +29,7 @@ class User(Base):
 
     learning_paths: Mapped[list["LearningPath"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     focus_sessions: Mapped[list["FocusSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    notifications_list: Mapped[list["Notification"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
-    )
+    notifications_list: Mapped[list["Notification"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class LearningPath(Base):
@@ -47,9 +45,7 @@ class LearningPath(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     user: Mapped[User] = relationship(back_populates="learning_paths")
-    sessions: Mapped[list["LearningSession"]] = relationship(
-        back_populates="path", cascade="all, delete-orphan", order_by="LearningSession.created_at"
-    )
+    sessions: Mapped[list["LearningSession"]] = relationship(back_populates="path", cascade="all, delete-orphan", order_by="LearningSession.created_at")
 
 
 class LearningSession(Base):
@@ -68,7 +64,7 @@ class LearningSession(Base):
 
 class FocusSession(Base):
     __tablename__ = "focus_sessions"
-    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     path_id: Mapped[str | None] = mapped_column(ForeignKey("learning_paths.id", ondelete="SET NULL"), index=True, nullable=True)
     learning_session_id: Mapped[str | None] = mapped_column(ForeignKey("learning_sessions.id", ondelete="SET NULL"), index=True, nullable=True)
@@ -83,15 +79,11 @@ class FocusSession(Base):
 
 class Notification(Base):
     __tablename__ = "notifications"
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     title: Mapped[str] = mapped_column(String(150), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    type: Mapped[str] = mapped_column(String(150), nullable=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-
     user: Mapped[User] = relationship(back_populates="notifications_list")
