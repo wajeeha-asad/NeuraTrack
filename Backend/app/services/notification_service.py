@@ -6,6 +6,11 @@ from sqlalchemy.orm import Session
 from app.db.models import Notification, User
 
 
+# Keep this compatible with the original production schema as well as the
+# expanded model, so a notification can never break the parent action.
+MAX_NOTIFICATION_TYPE_LENGTH = 50
+
+
 def create_notification(
     db: Session,
     user: User,
@@ -16,13 +21,11 @@ def create_notification(
     dedupe: bool = True,
     created_at: datetime | None = None,
 ):
-    """Create an in-app notification while respecting the user's preference.
-
-    For milestone/reminder notifications, the caller can encode a date or entity
-    id into notification_type so the same reminder is not created repeatedly.
-    """
+    """Create an in-app notification while respecting the user's preference."""
     if not user.notifications:
         return None
+
+    notification_type = str(notification_type)[:MAX_NOTIFICATION_TYPE_LENGTH]
 
     if dedupe:
         existing = db.scalar(
