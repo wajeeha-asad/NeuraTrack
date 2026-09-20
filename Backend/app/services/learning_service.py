@@ -1,9 +1,9 @@
-
 from datetime import datetime, timezone
 from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.db.models import LearningPath, LearningSession, FocusSession, User
+from app.db.models import LearningPath, LearningSession, User
+from app.services.notification_service import create_notification
 
 
 def path_to_dict(path: LearningPath) -> dict:
@@ -11,33 +11,20 @@ def path_to_dict(path: LearningPath) -> dict:
     total = sum(int(s.duration or 0) for s in sessions)
     completed = sum(int(s.duration or 0) for s in sessions if s.completed)
     return {
-        "id": path.id,
-        "title": path.title,
-        "description": path.description,
-        "category": path.category,
-        "difficulty": path.difficulty,
-        "deadline": path.deadline,
+        "id": path.id, "title": path.title, "description": path.description,
+        "category": path.category, "difficulty": path.difficulty, "deadline": path.deadline,
         "color": path.color,
-        "sessions": [
-            {
-                "id": s.id,
-                "title": s.title,
-                "duration": s.duration,
-                "completed": s.completed,
-                "completed_at": s.completed_at.isoformat() if s.completed_at else None,
-            }
-            for s in sessions
-        ],
-        "totalMinutes": total,
-        "completedMinutes": completed,
+        "sessions": [{"id": s.id, "title": s.title, "duration": s.duration,
+                      "completed": s.completed,
+                      "completed_at": s.completed_at.isoformat() if s.completed_at else None}
+                     for s in sessions],
+        "totalMinutes": total, "completedMinutes": completed,
         "progress": round((completed / total) * 100) if total else 0,
     }
 
 
 def get_paths(db: Session, user: User):
-    return [path_to_dict(p) for p in db.scalars(
-        select(LearningPath).where(LearningPath.user_id == user.id).order_by(LearningPath.created_at)
-    ).all()]
+    return [path_to_dict(p) for p in db.scalars(select(LearningPath).where(LearningPath.user_id == user.id).order_by(LearningPath.created_at)).all()]
 
 
 def get_owned_path(db: Session, user: User, path_id: str):
@@ -45,80 +32,67 @@ def get_owned_path(db: Session, user: User, path_id: str):
 
 
 def create_path(db: Session, user: User, data):
-    path = LearningPath(
-        id=str(uuid4()), user_id=user.id, title=data.title, description=data.description,
-        category=data.category, difficulty=data.difficulty, deadline=data.deadline, color=data.color
-    )
-    db.add(path)
-    db.commit()
-    db.refresh(path)
+    path = LearningPath(id=str(uuid4()), user_id=user.id, title=data.title, description=data.description,
+                        category=data.category, difficulty=data.difficulty, deadline=data.deadline, color=data.color)
+    db.add(path); db.flush()
+    create_notification(db, user, "New learning path added 📚", f"Your learning path “{path.title}” is ready. Time to make progress!", f"path_created:{path.id}")
+    db.commit(); db.refresh(path)
     return path_to_dict(path)
 
 
 def update_path(db: Session, user: User, path_id: str, data):
     path = get_owned_path(db, user, path_id)
-    if not path:
-        return None
+    if not path: return None
     for field in ("title", "description", "category", "difficulty", "deadline", "color"):
         value = getattr(data, field)
-        if value is not None:
-            setattr(path, field, value)
-    db.commit()
-    db.refresh(path)
+        if value is not None: setattr(path, field, value)
+    db.commit(); db.refresh(path)
     return path_to_dict(path)
 
 
 def delete_path(db: Session, user: User, path_id: str):
     path = get_owned_path(db, user, path_id)
-    if not path:
-        return False
-    db.delete(path)
-    db.commit()
-    return True
+    if not path: return False
+    db.delete(path); db.commit(); return True
 
 
 def add_session(db: Session, user: User, path_id: str, data):
     path = get_owned_path(db, user, path_id)
-    if not path:
-        return None
+    if not path: return None
     session = LearningSession(id=str(uuid4()), path_id=path.id, title=data.title, duration=data.duration)
-    db.add(session)
-    db.commit()
-    db.refresh(path)
+    db.add(session); db.flush()
+    create_notification(db, user, "New learning session 📖", f"“{session.title}” was added to {path.title}. Keep your momentum going!", f"learning_session_created:{session.id}")
+    db.commit(); db.refresh(path)
     return path_to_dict(path)
 
 
 def update_session(db: Session, user: User, path_id: str, session_id: str, data):
     path = get_owned_path(db, user, path_id)
-    if not path:
-        return None
-    session = db.scalar(select(LearningSession).where(
-        LearningSession.id == session_id, LearningSession.path_id == path_id
-    ))
-    if not session:
-        return None
+    if not path: return None
+    session = db.scalar(select(LearningSession).where(LearningSession.id == session_id, LearningSession.path_id == path_id))
+    if not session: return None
     if data.title is not None: session.title = data.title
     if data.duration is not None: session.duration = data.duration
     if data.completed is not None:
+        was_completed = session.completed
         session.completed = data.completed
         session.completed_at = datetime.now(timezone.utc).replace(tzinfo=None) if data.completed else None
-    db.commit()
-    db.refresh(path)
+        if data.completed and not was_completed:
+            create_notification(db, user, "Learning session completed ✓", f"You completed “{session.title}” in {path.title}. Nice work!", f"learning_session_completed:{session.id}")
+            db.flush()
+            sessions = list(path.sessions or [])
+            if sessions and all(item.completed for item in sessions):
+                create_notification(db, user, "Learning path completed 🎉", f"You completed the “{path.title}” learning path. Huge progress!", f"path_completed:{path.id}")
+    db.commit(); db.refresh(path)
     return path_to_dict(path)
 
 
 def delete_session(db: Session, user: User, path_id: str, session_id: str):
     path = get_owned_path(db, user, path_id)
-    if not path:
-        return None
-    session = db.scalar(select(LearningSession).where(
-        LearningSession.id == session_id, LearningSession.path_id == path_id
-    ))
-    if not session:
-        return None
-    db.delete(session)
-    db.commit()
-    db.refresh(path)
+    if not path: return None
+    session = db.scalar(select(LearningSession).where(LearningSession.id == session_id, LearningSession.path_id == path_id))
+    if not session: return None
+    db.delete(session); db.commit(); db.refresh(path)
     return path_to_dict(path)
 
 
