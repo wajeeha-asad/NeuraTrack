@@ -8,6 +8,17 @@ import { NavLink } from "react-router-dom";
 import { navigation } from "../../data/navigation";
 import Logo from "../common/Logo";
 
+function formatNotificationTime(value) {
+  if (!value) return "";
+  const raw = String(value);
+  // Backend stores UTC datetimes as naive values. Explicitly mark them as UTC
+  // before converting to the browser's local timezone.
+  const iso = /(?:Z|[+-]\d{2}:?\d{2})$/.test(raw) ? raw : `${raw}Z`;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
 export default function Topbar() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -110,7 +121,7 @@ export default function Topbar() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-white">{notification.title}</p>
                     <p className="mt-1 text-xs leading-5 text-slate-400">{notification.message}</p>
-                    <p className="mt-1 text-[10px] text-slate-500">{new Date(notification.created_at).toLocaleString()}</p>
+                    <p className="mt-1 text-[10px] text-slate-500">{formatNotificationTime(notification.created_at)}</p>
                   </div>
                 </div>
               </DropdownMenuItem>
