@@ -59,26 +59,20 @@ def record_focus_session(db: Session, user: User, data):
     user.longest_streak = max(user.longest_streak, streak)
 
     if user.notifications:
-        create_notification(db, user, "Focus session completed 🎯",
-                            f"You completed {data.duration} minutes of {data.subject}. Great work!",
-                            f"focus_completed:{item.id}", dedupe=False, created_at=now)
-
+        create_notification(db, user, "Focus session completed 🎯", f"You completed {data.duration} minutes of {data.subject}. Great work!", f"focus_completed:{item.id}", dedupe=False, created_at=now)
         if previous_level < user.level:
-            create_notification(db, user, "Level up unlocked ✨", f"You reached Level {user.level}. Your consistency is paying off!",
-                                f"level_up:{user.level}", created_at=now)
-
+            create_notification(db, user, "Level up unlocked ✨", f"You reached Level {user.level}. Your consistency is paying off!", f"level_up:{user.level}", created_at=now)
         for milestone in (3, 7, 14, 30, 50, 100):
             if streak >= milestone and previous_streak < milestone:
-                create_notification(db, user, f"{milestone}-day streak 🔥", f"You studied {milestone} days in a row. Keep the streak alive!",
-                                    f"streak_milestone:{milestone}", created_at=now)
+                create_notification(db, user, f"{milestone}-day streak 🔥", f"You studied {milestone} days in a row. Keep the streak alive!", f"streak_milestone:{milestone}", created_at=now)
 
-        today_minutes = sum(s.duration for s in db.scalars(select(FocusSession).where(FocusSession.user_id == user.id)).all() if s.date.date() == now.date()) + data.duration
+        # The new focus session is flushed before this query, so do not add its duration twice.
+        db.flush()
+        today_minutes = sum(s.duration for s in db.scalars(select(FocusSession).where(FocusSession.user_id == user.id)).all() if s.date.date() == now.date())
         target = user.daily_study_target or 120
         if today_minutes >= target:
-            create_notification(db, user, "Daily goal achieved 🎯", f"You reached your {target}-minute study goal today. Excellent work!",
-                                f"daily_goal:{now.date()}", created_at=now)
+            create_notification(db, user, "Daily goal achieved 🎯", f"You reached your {target}-minute study goal today. Excellent work!", f"daily_goal:{now.date()}", created_at=now)
 
-        # Achievement unlock notifications mirror the achievement page's rules.
         new_total = previous_total_minutes + data.duration
         achievement_rules = [
             (not previous_session_exists, "First Session", "You completed your first focus session. Welcome to NeuraTrack!"),
@@ -88,18 +82,10 @@ def record_focus_session(db: Session, user: User, data):
             (target > 0 and today_minutes - data.duration < target <= today_minutes, "Goal Crusher", "You completed today's study target. Goal crusher unlocked!"),
             (previous_total_minutes < 100 * 60 <= new_total, "Century Scholar", "You crossed 100 hours of focused learning. Incredible milestone!"),
         ]
-        achievement_types = {
-            "First Session": "achievement:first-session",
-            "7-Day Streak": "achievement:seven-day-streak",
-            "50 Hours Studied": "achievement:fifty-hours",
-            "Level Up": "achievement:level-up",
-            "Goal Crusher": "achievement:goal-crusher",
-            "Century Scholar": "achievement:hundred-hours",
-        }
+        achievement_types = {"First Session": "achievement:first-session", "7-Day Streak": "achievement:seven-day-streak", "50 Hours Studied": "achievement:fifty-hours", "Level Up": "achievement:level-up", "Goal Crusher": "achievement:goal-crusher", "Century Scholar": "achievement:hundred-hours"}
         for unlocked_now, title, message in achievement_rules:
             if unlocked_now:
-                create_notification(db, user, f"Achievement unlocked 🏆 — {title}", message,
-                                    achievement_types[title], created_at=now)
+                create_notification(db, user, f"Achievement unlocked 🏆 — {title}", message, achievement_types[title], created_at=now)
 
     db.commit(); db.refresh(item)
     return serialize_focus(item, path)
