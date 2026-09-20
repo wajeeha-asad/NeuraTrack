@@ -26,12 +26,14 @@ def get_focus_sessions(db: Session, user: User):
 def record_focus_session(db: Session, user: User, data):
     path = None
     learning_session = None
+    session_was_completed = False
     if data.path_id:
         path = db.scalar(select(LearningPath).where(LearningPath.id == data.path_id, LearningPath.user_id == user.id))
         if not path: raise ValueError("Learning path not found.")
     if data.session_id:
         learning_session = db.scalar(select(LearningSession).where(LearningSession.id == data.session_id, LearningSession.path_id == data.path_id))
         if not learning_session: raise ValueError("Learning session not found.")
+        session_was_completed = learning_session.completed
         learning_session.completed = True
         learning_session.completed_at = datetime.utcnow()
 
@@ -60,13 +62,20 @@ def record_focus_session(db: Session, user: User, data):
 
     if user.notifications:
         create_notification(db, user, "Focus session completed 🎯", f"You completed {data.duration} minutes of {data.subject}. Great work!", f"focus_completed:{item.id}", dedupe=False, created_at=now)
+
+        if learning_session and not session_was_completed:
+            create_notification(db, user, "Learning session completed ✓", f"You completed “{learning_session.title}” in {path.title}. Nice work!", f"learning_session_completed:{learning_session.id}", created_at=now)
+            db.flush()
+            path_sessions = list(path.sessions or [])
+            if path_sessions and all(s.completed for s in path_sessions):
+                create_notification(db, user, "Learning path completed 🎉", f"You completed the “{path.title}” learning path. Huge progress!", f"path_completed:{path.id}", created_at=now)
+
         if previous_level < user.level:
             create_notification(db, user, "Level up unlocked ✨", f"You reached Level {user.level}. Your consistency is paying off!", f"level_up:{user.level}", created_at=now)
         for milestone in (3, 7, 14, 30, 50, 100):
             if streak >= milestone and previous_streak < milestone:
                 create_notification(db, user, f"{milestone}-day streak 🔥", f"You studied {milestone} days in a row. Keep the streak alive!", f"streak_milestone:{milestone}", created_at=now)
 
-        # The new focus session is flushed before this query, so do not add its duration twice.
         db.flush()
         today_minutes = sum(s.duration for s in db.scalars(select(FocusSession).where(FocusSession.user_id == user.id)).all() if s.date.date() == now.date())
         target = user.daily_study_target or 120
