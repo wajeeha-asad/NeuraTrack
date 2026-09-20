@@ -35,7 +35,7 @@ def create_path(db: Session, user: User, data):
     path = LearningPath(id=str(uuid4()), user_id=user.id, title=data.title, description=data.description,
                         category=data.category, difficulty=data.difficulty, deadline=data.deadline, color=data.color)
     db.add(path); db.flush()
-    create_notification(db, user, "New learning path added 📚", f"Your learning path “{path.title}” is ready. Time to make progress!", f"path_created:{path.id}")
+    create_notification(db, user, "New learning path added 📚", f"Your learning path “{path.title}” is ready. Time to make progress!", f"pc:{path.id}")
     db.commit(); db.refresh(path)
     return path_to_dict(path)
 
@@ -61,7 +61,7 @@ def add_session(db: Session, user: User, path_id: str, data):
     if not path: return None
     session = LearningSession(id=str(uuid4()), path_id=path.id, title=data.title, duration=data.duration)
     db.add(session); db.flush()
-    create_notification(db, user, "New learning session 📖", f"“{session.title}” was added to {path.title}. Keep your momentum going!", f"learning_session_created:{session.id}")
+    create_notification(db, user, "New learning session 📖", f"“{session.title}” was added to {path.title}. Keep your momentum going!", f"sc:{session.id}")
     db.commit(); db.refresh(path)
     return path_to_dict(path)
 
@@ -78,11 +78,11 @@ def update_session(db: Session, user: User, path_id: str, session_id: str, data)
         session.completed = data.completed
         session.completed_at = datetime.now(timezone.utc).replace(tzinfo=None) if data.completed else None
         if data.completed and not was_completed:
-            create_notification(db, user, "Learning session completed ✓", f"You completed “{session.title}” in {path.title}. Nice work!", f"learning_session_completed:{session.id}")
+            create_notification(db, user, "Learning session completed ✓", f"You completed “{session.title}” in {path.title}. Nice work!", f"lc:{session.id}")
             db.flush()
             sessions = list(path.sessions or [])
             if sessions and all(item.completed for item in sessions):
-                create_notification(db, user, "Learning path completed 🎉", f"You completed the “{path.title}” learning path. Huge progress!", f"path_completed:{path.id}")
+                create_notification(db, user, "Learning path completed 🎉", f"You completed the “{path.title}” learning path. Huge progress!", f"lp:{path.id}")
     db.commit(); db.refresh(path)
     return path_to_dict(path)
 
